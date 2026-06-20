@@ -1,9 +1,7 @@
 /**
  * ==============================================================================
- * SISTEMA MAESTRO UNIFICADO: ECOSISTEMA DIGITAL FITNESS v2.0
- * ESTADO: 100% FUNCIONAL Y EXTENDIDO (Listo para GitHub / Despliegue en la Nube)
- * SKILL ACTIVADO: nextlevelbuilder/ui-ux-pro-max-skill
- * ASISTENTE: Javid tech (Avatar: Camisa Azul, Estado: Online)
+ * SISTEMA MAESTRO UNIFICADO v3.0: ECOSISTEMA DIGITAL FITNESS + GAMIFICACIÓN
+ * ESTADO: 100% FUNCIONAL (Gamificación, Feed de Retención, Desbloqueos, Javid tech AI)
  * ==============================================================================
  */
 
@@ -15,97 +13,90 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SECRET_KEY = "JavidTech_Super_Secret_Key_2026_ProMax_Elite";
+const SECRET_KEY = "JavidTech_Super_Secret_Key_2026_Elite_Pro";
 
 // ==========================================
-// 1. BASE DE DATOS EXTENDIDA (ESCALERA DE VALOR)
+// 1. BASE DE DATOS EXTENDIDA (CMS + PROGRAMAS)
 // ==========================================
+
+// Feed de Retención Diario (Videos, Audios, Artículos)
+const feedDiario = {
+    video: { titulo: "La Mentalidad del 1% (Cero Excusas)", url: "https://www.youtube.com/embed/jNQXAC9IVRw", desc: "Javid tech te explica cómo blindar tu mente para esta semana." },
+    audio: { titulo: "Podcast: Reprogramación Metabólica", duracion: "12:45 min", desc: "Escúchalo mientras limpias tu casa o caminas." },
+    articulos: [
+        { titulo: "El mito de contar calorías", lectura: "4 min", desc: "Por qué el método visual de las manos es superior y más sostenible." },
+        { titulo: "Optimiza tu sueño", lectura: "3 min", desc: "Rutina nocturna para maximizar la hormona del crecimiento." }
+    ]
+};
+
 const ecosistemaFitness = {
     novatos: {
-        id: "novatos",
-        titulo: "🌱 Nivel 1: Programa Novatos (El Inicio)",
-        enfoque: "Creación de hábitos, 100% en casa, método visual de manos. Cero frustración.",
-        descripcion: "Diseñado específicamente para personas que nunca han entrenado, sienten vergüenza de ir a un gimnasio o les cuesta ser constantes. El objetivo central es eliminar miedos, crear el hábito diario del ejercicio y generar las primeras victorias utilizando rutinas 100% en casa con el propio peso corporal y sin dietas restrictivas.",
+        id: "novatos", titulo: "🌱 Nivel 1: Programa Novatos", estado: "desbloqueado",
+        enfoque: "Creación de hábitos, 100% en casa. Cero frustración.",
+        descripcion: "Elimina miedos y crea el hábito diario utilizando rutinas con el propio peso corporal y método visual de manos.",
+        diasTotales: 28, // 4 semanas para el ejemplo
         modulos: [
-            { titulo: "Evaluación y Mente (Semana 0)", desc: "Despegue seguro. Cuestionario de salud, definición de metas realistas 'anti-frustración' a corto plazo, y un tutorial sin estrés para tomar fotos y medidas." },
-            { titulo: "Nutrición Sencilla", desc: "Método visual de las manos para calcular porciones sin estrés. Implementación de la regla 80/20. Cero conteo de calorías y cero dietas restrictivas." },
-            { titulo: "Entrenamiento Base", desc: "Rutinas 100% en casa. Iniciamos con el peso corporal y progresivamente incorporamos elementos caseros básicos (botellas de agua) para cuidar posturas y adaptar articulaciones." },
-            { titulo: "Biofeedback Básico", desc: "Sistema simple para medir tus niveles de energía, calidad de sueño y recuperación, asegurando que no haya sobreentrenamiento ni frustración." }
+            { titulo: "Evaluación y Mente", desc: "Despegue seguro y metas anti-frustración." },
+            { titulo: "Nutrición Sencilla", desc: "Método visual de las manos." }
         ]
     },
     intermedio: {
-        id: "intermedio",
-        titulo: "🔥 Nivel 2: Programa Intermedio (La Transición)",
-        enfoque: "Desarrollo de fuerza real, recomposición corporal, uso de bandas/mancuernas.",
-        descripcion: "Dirigido a clientes que YA tienen el hábito del ejercicio. Aquí pasamos de lo visual a una introducción estratégica de macronutrientes. El entrenamiento incorpora equipo real para iniciar la hipertrofia y el tono es más analítico, motivador y enfocado en la técnica correcta.",
+        id: "intermedio", titulo: "🔥 Nivel 2: Intermedio", estado: "bloqueado",
+        enfoque: "Fuerza real, recomposición corporal, bandas/mancuernas.",
+        descripcion: "Transición a equipo externo. Foco en hipertrofia y ciclado básico de carbohidratos.",
+        diasTotales: 84, // 12 semanas
         modulos: [
-            { titulo: "Evaluación y Enfoque", desc: "Auditoría física: Test de fuerza inicial y evaluación de rango de movimiento. Se establecen metas de rendimiento más allá de lo que dice la báscula." },
-            { titulo: "Fuerza Estructural", desc: "Transición de peso corporal a equipo externo (bandas elásticas y mancuernas). Foco en la sobrecarga progresiva y control motor para hipertrofia." },
-            { titulo: "Ingeniería de Macros", desc: "Introducción al ciclado básico de carbohidratos (Días altos en demanda vs Días de descanso) y estrategia de nutrición peri-entreno." },
-            { titulo: "Sistema Meal Prep", desc: "Auditoría de despensa, estrategia 'Batch Cooking' para optimizar horas en la cocina y gestión de fricción en eventos sociales." }
+            { titulo: "Fuerza Estructural", desc: "Transición de peso corporal a equipo externo." },
+            { titulo: "Ingeniería de Macros", desc: "Introducción al ciclado de carbohidratos." }
         ]
     },
     avanzado: {
-        id: "avanzado",
-        titulo: "🏆 Nivel 3: Programa Avanzado (La Maestría)",
-        enfoque: "Alto rendimiento, hipertrofia máxima, entrenamiento híbrido de élite.",
-        descripcion: "El escalón final (meses 6 al 9). Producto High-Ticket para personas disciplinadas con base sólida. Busca resultados estéticos de élite bajo una cultura de 'cero excusas'. Ingeniería nutricional milimétrica y entrenamiento híbrido que combina la fuerza del gimnasio con el acondicionamiento en casa.",
+        id: "avanzado", titulo: "🏆 Nivel 3: Avanzado", estado: "bloqueado",
+        enfoque: "Alto rendimiento, hipertrofia máxima, híbrido.",
+        descripcion: "Entrenamiento híbrido (Gym + Casa) y precisión milimétrica.",
+        diasTotales: 84, // 12 semanas
         modulos: [
-            { titulo: "Auditoría de Élite", desc: "Análisis biomecánico profundo, establecimiento de metas competitivas y rastreo avanzado de variables de recuperación." },
-            { titulo: "Metabolismo Avanzado", desc: "Periodización nutricional avanzada, cargas de carbohidratos (refeeds), optimización de salud intestinal y suplementación basada en evidencia." },
-            { titulo: "Fuerza y Potencia Híbrida", desc: "Levantamientos pesados enfocados en fuerza estructural en el gimnasio + sesiones de alta intensidad y trabajo metabólico extremo en casa." },
-            { titulo: "Puesta a Punto (Peak Week)", desc: "Protocolos milimétricos para reducción de agua subcutánea, carga de glucógeno y presentación de un físico de nivel competitivo." }
+            { titulo: "Auditoría de Élite", desc: "Análisis biomecánico profundo." },
+            { titulo: "Metabolismo Avanzado", desc: "Periodización y refeeds." }
         ]
     }
 };
 
 // ==========================================
-// 2. BACKEND / APIs (LOGIC & SECURITY)
+// 2. BACKEND API
 // ==========================================
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    // Sistema de validación de seguridad
     if (username === "cliente_vip" && password === "fitness2026") {
-        const token = jwt.sign({ user: username, role: "alumno" }, SECRET_KEY, { expiresIn: '48h' });
-        res.json({ success: true, token, message: "Validación biométrica simulada exitosa. Acceso concedido." });
+        const token = jwt.sign({ user: username }, SECRET_KEY, { expiresIn: '48h' });
+        res.json({ success: true, token, message: "Acceso concedido." });
     } else {
-        res.status(401).json({ success: false, message: "Acceso Denegado. Credenciales de la matriz incorrectas." });
+        res.status(401).json({ success: false, message: "Credenciales incorrectas." });
     }
 });
 
-app.get('/api/programas', (req, res) => {
-    res.json(ecosistemaFitness);
+app.get('/api/datos-plataforma', (req, res) => {
+    res.json({ programas: ecosistemaFitness, feed: feedDiario });
 });
 
-// Cerebro de Javid tech (Asistente Virtual)
 app.post('/api/javid-tech/chat', (req, res) => {
-    const { userMessage, programaActual } = req.body;
+    const { userMessage, contexto } = req.body;
     let reply = "";
     const msg = userMessage.toLowerCase();
     
-    // Análisis de Intención y Contexto
-    if (msg.includes("ayuda") || msg.includes("no sé qué hacer")) {
-        reply = "Mantén la calma. Como tu arquitecto digital, estoy aquí para guiarte. Selecciona en el panel izquierdo el nivel en el que te encuentras y cargaré los manuales de procedimiento.";
-    } else if (msg.includes("gracias")) {
-        reply = "Es mi deber operativo. Seguimos avanzando hacia la maestría física.";
-    } else if (programaActual === "novatos") {
-        reply = "Identifico que estamos en la fase Novatos. Recuerda, nuestro protocolo principal hoy es 'Cero Frustración'. Si sientes dudas sobre el método visual de manos o tu rutina básica en casa, dímelo y lo resolvemos en el acto.";
-    } else if (programaActual === "intermedio") {
-        reply = "Fase Intermedia activa. Aquí aplicamos la ciencia de la recomposición corporal. ¿Necesitas que audite tu ingesta de macronutrientes o revisemos tu técnica de sobrecarga con mancuernas?";
-    } else if (programaActual === "avanzado") {
-        reply = "Atleta de Élite, sistemas operativos al 100%. Estás en La Maestría. Aquí es modo 'Cero Excusas'. ¿Iniciamos el protocolo de carga de carbohidratos o analizamos tu métrica de hipertrofia máxima?";
+    if (msg.includes("tarea") || msg.includes("completado") || msg.includes("check")) {
+        reply = "¡Excelente! He registrado tu progreso en el sistema central. Cada pequeño check te acerca a desbloquear el siguiente nivel. Sigue así.";
+    } else if (contexto === "feed") {
+        reply = "Estás en el Centro de Retención. Te recomiendo escuchar el podcast de hoy; tiene información vital sobre recomposición corporal.";
     } else {
-        reply = "Saludos, soy Javid tech, tu Inteligencia Artificial personal del Ecosistema Fitness. Analizando tu perfil... Por favor, selecciona un programa (Novatos, Intermedio o Avanzado) en el menú lateral para establecer tu hoja de ruta técnica.";
+        reply = "Soy Javid tech, tu arquitecto digital. Tus métricas están actualizándose. Continúa tachando tus tareas diarias para llenar la barra de progreso al 100%.";
     }
     
-    // Simula un ligero retraso de "procesamiento IA"
-    setTimeout(() => {
-        res.json({ javidReply: reply, status: "Online" });
-    }, 600);
+    setTimeout(() => res.json({ javidReply: reply }), 500);
 });
 
 // ==========================================
-// 3. FRONTEND RENDERIZADO AL VUELO (SSR)
+// 3. FRONTEND RENDERIZADO (SSR) CON GAMIFICACIÓN
 // ==========================================
 app.get('/', (req, res) => {
     res.send(`
@@ -114,351 +105,384 @@ app.get('/', (req, res) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Plataforma Integral Fitness | Javid tech Ecosystem</title>
+        <title>Plataforma SaaS Fitness | Javid tech</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
         <style>
-            /* =======================================================================
-               CSS MASTER: SKILL nextlevelbuilder/ui-ux-pro-max-skill
-               ======================================================================= */
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-
+            /* CSS PREMIUM - UI/UX PRO MAX SKILL */
             :root {
-                --bg-main: #090a0f;
-                --bg-panel: #13161f;
-                --bg-card: #1c212e;
-                --border-color: #2b3245;
-                --primary-blue: #3b82f6;
-                --primary-hover: #2563eb;
-                --status-online: #10b981;
-                --text-main: #f3f4f6;
-                --text-muted: #9ca3af;
-                --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+                --bg-main: #090a0f; --bg-panel: #13161f; --bg-card: #1c212e;
+                --border-color: #2b3245; --primary-blue: #3b82f6; --primary-hover: #2563eb;
+                --status-online: #10b981; --locked: #ef4444; --text-main: #f3f4f6; --text-muted: #9ca3af;
+                --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.4);
+                --glow-green: 0 0 15px rgba(16, 185, 129, 0.5);
             }
-
             * { box-sizing: border-box; margin: 0; padding: 0; }
-            body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); overflow: hidden; height: 100vh; }
+            body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); height: 100vh; overflow: hidden; }
             
-            /* Animaciones */
-            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-            @keyframes pulseOnline { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
-
             .screen { display: none; width: 100%; height: 100%; }
-            .screen.active { display: flex; animation: fadeIn 0.5s ease; }
+            .screen.active { display: flex; animation: fadeIn 0.4s ease; }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-            /* --- PANTALLA DE LOGIN --- */
-            #login-screen { justify-content: center; align-items: center; background: radial-gradient(circle at top right, #13161f, #090a0f); }
-            .login-container { background: var(--bg-panel); padding: 50px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); width: 100%; max-width: 420px; text-align: center; }
-            .login-container h1 { font-size: 28px; margin-bottom: 5px; background: -webkit-linear-gradient(45deg, #3b82f6, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-            .login-container p { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
-            .input-group { margin-bottom: 20px; text-align: left; }
-            .input-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-            .input-group input { width: 100%; padding: 15px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 10px; color: white; font-size: 15px; transition: all 0.3s; }
-            .input-group input:focus { outline: none; border-color: var(--primary-blue); box-shadow: var(--shadow-glow); }
-            .btn-primary { width: 100%; padding: 15px; background: var(--primary-blue); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
-            .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
-            .error-box { color: #ef4444; font-size: 13px; margin-top: 15px; min-height: 20px; }
+            /* --- LOGIN --- */
+            #login-screen { justify-content: center; align-items: center; background: radial-gradient(circle at center, #13161f, #090a0f); }
+            .login-box { background: var(--bg-panel); padding: 40px; border-radius: 16px; border: 1px solid var(--border-color); text-align: center; width: 350px; box-shadow: var(--shadow-glow); }
+            .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: white; outline: none; }
+            .login-box button { width: 100%; padding: 12px; background: var(--primary-blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+            .error-txt { color: var(--locked); font-size: 13px; margin-top: 10px; min-height: 15px;}
 
-            /* --- DASHBOARD PRINCIPAL --- */
-            #dashboard-screen { flex-direction: column; }
-            
-            /* Header & Javid tech Identity */
-            header { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); }
-            .ai-profile { display: flex; align-items: center; gap: 20px; }
-            
-            /* Avatar Camisa Azul y Anillo Online */
-            .avatar-wrapper { position: relative; }
-            .ring-online { padding: 4px; border-radius: 50%; border: 3px solid var(--status-online); animation: pulseOnline 2s infinite; background: var(--bg-main); }
-            /* Placeholder para la imagen de Javid tech con camisa azul */
-            .avatar-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: url('https://ui-avatars.com/api/?name=Javid+Tech&background=3b82f6&color=fff&size=100&bold=true') center/cover; }
-            
-            .ai-info h2 { font-size: 20px; font-weight: 800; margin: 0; letter-spacing: 0.5px; }
-            .ai-info span { font-size: 12px; color: var(--status-online); display: flex; align-items: center; gap: 6px; margin-top: 4px; font-weight: 600;}
-            .ai-info span::before { content: ""; width: 8px; height: 8px; background: var(--status-online); border-radius: 50%; display: inline-block; }
-            
-            .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: 600; }
-            .btn-outline:hover { background: #ef4444; border-color: #ef4444; color: white; }
+            /* --- HEADER & AI --- */
+            header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); z-index: 10; relative;}
+            .ai-profile { display: flex; align-items: center; gap: 15px; }
+            .ring-online { border: 2px solid var(--status-online); padding: 3px; border-radius: 50%; box-shadow: var(--glow-green); }
+            .avatar-img { width: 50px; height: 50px; border-radius: 50%; background: url('https://ui-avatars.com/api/?name=Javid+Tech&background=3b82f6&color=fff&bold=true') center/cover; }
+            .ai-info h2 { font-size: 18px; margin: 0; }
+            .ai-info span { font-size: 12px; color: var(--status-online); }
 
-            /* Layout Central */
-            .main-content { display: flex; flex: 1; overflow: hidden; }
+            /* --- LAYOUT CENTRAL --- */
+            .main-layout { display: flex; flex: 1; height: calc(100vh - 85px); }
             
-            /* Sidebar: Escalera de Valor */
-            .sidebar { width: 300px; background: var(--bg-panel); border-right: 1px solid var(--border-color); padding: 30px 20px; display: flex; flex-direction: column; gap: 15px; }
-            .sidebar-title { font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 10px; padding-left: 10px; }
-            .nav-item { padding: 18px 20px; background: var(--bg-card); border: 1px solid transparent; border-radius: 12px; color: var(--text-main); font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 10px; }
-            .nav-item:hover { transform: translateX(5px); border-color: var(--border-color); }
-            .nav-item.active { background: rgba(59, 130, 246, 0.1); border-color: var(--primary-blue); color: var(--primary-blue); box-shadow: inset 4px 0 0 var(--primary-blue); }
+            /* --- SIDEBAR & GAMIFICACIÓN --- */
+            .sidebar { width: 320px; background: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; overflow-y: auto; }
+            .nav-section { padding: 20px; border-bottom: 1px solid var(--border-color); }
+            .nav-item { padding: 15px; background: var(--bg-card); border-radius: 10px; margin-bottom: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center;}
+            .nav-item:hover { border-color: var(--primary-blue); }
+            .nav-item.active { background: rgba(59, 130, 246, 0.1); border-color: var(--primary-blue); box-shadow: inset 4px 0 0 var(--primary-blue); }
+            .nav-item.locked { opacity: 0.5; cursor: not-allowed; }
+            .lock-icon { font-size: 12px; color: var(--locked); }
 
-            /* Contenido Dinámico de Programas */
-            .workspace { flex: 1; padding: 50px; overflow-y: auto; background: var(--bg-main); }
-            .welcome-state { text-align: center; margin-top: 15vh; opacity: 0.5; }
-            .welcome-state h1 { font-size: 40px; margin-bottom: 20px; }
+            /* Centro de Control de Progreso */
+            .progress-container { padding: 20px; background: rgba(16, 185, 129, 0.05); }
+            .progress-title { font-size: 13px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; font-weight: 800; display: flex; justify-content: space-between;}
+            .progress-bar-bg { width: 100%; height: 12px; background: var(--bg-card); border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 15px;}
+            .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary-blue), var(--status-online)); width: 0%; transition: width 0.5s ease; box-shadow: var(--glow-green);}
             
-            .program-header { margin-bottom: 40px; animation: fadeIn 0.4s ease; }
-            .program-header h1 { font-size: 34px; margin-bottom: 15px; }
-            .program-header .badge { display: inline-block; padding: 6px 12px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
-            .program-header p { font-size: 16px; color: var(--text-muted); line-height: 1.7; max-width: 900px; }
+            /* Mini Calendario (Heatmap) */
+            .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+            .cal-day { aspect-ratio: 1; background: var(--bg-card); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); border: 1px solid transparent; transition: 0.3s;}
+            .cal-day.completed { background: var(--status-online); color: #fff; box-shadow: 0 0 5px var(--status-online); }
+            .cal-day.missed { background: var(--locked); color: #fff; }
+            .cal-day.today { border-color: var(--primary-blue); font-weight: bold; }
+
+            /* --- WORKSPACE CENTRAL --- */
+            .workspace { flex: 1; padding: 40px; overflow-y: auto; background: var(--bg-main); position: relative;}
             
-            .modules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; animation: fadeIn 0.6s ease; }
-            .module-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; transition: 0.3s; position: relative; overflow: hidden; }
-            .module-card::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary-blue); opacity: 0; transition: 0.3s; }
-            .module-card:hover { transform: translateY(-5px); border-color: var(--primary-blue); box-shadow: var(--shadow-glow); }
-            .module-card:hover::before { opacity: 1; }
-            .module-card h3 { font-size: 20px; margin-bottom: 15px; color: white; }
-            .module-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 25px; }
-            .module-card button { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--border-color); border-radius: 8px; color: white; cursor: pointer; transition: 0.3s; font-weight: 600;}
-            .module-card button:hover { background: var(--primary-blue); border-color: var(--primary-blue); }
-
-            /* Panel Chat de Javid tech */
-            .chat-panel { width: 380px; background: var(--bg-panel); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
-            .chat-header { padding: 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); }
-            .chat-header h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; color: #fff; }
-            .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+            /* Feed Content */
+            .feed-grid { display: grid; gap: 20px; }
+            .video-card iframe { width: 100%; height: 400px; border-radius: 12px; border: none; }
+            .content-card { background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); }
             
-            .msg { max-width: 85%; padding: 15px; border-radius: 12px; font-size: 14px; line-height: 1.6; animation: fadeIn 0.3s ease; }
-            .msg-javid { background: var(--bg-card); color: var(--text-main); align-self: flex-start; border: 1px solid var(--border-color); border-left: 4px solid var(--primary-blue); border-top-left-radius: 4px; }
-            .msg-user { background: var(--primary-blue); color: #fff; align-self: flex-end; border-top-right-radius: 4px; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2); }
-            .msg-system { background: transparent; color: var(--text-muted); align-self: center; font-size: 12px; border: 1px dashed var(--border-color); width: 100%; text-align: center; }
+            /* Checklist Diario */
+            .checklist-panel { background: var(--bg-panel); border: 1px solid var(--primary-blue); border-radius: 16px; padding: 25px; margin-bottom: 30px; box-shadow: var(--shadow-glow);}
+            .checklist-panel h3 { color: var(--primary-blue); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;}
+            .task-item { display: flex; align-items: center; gap: 15px; padding: 12px; background: var(--bg-card); border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;}
+            .task-item:hover { transform: translateX(5px); }
+            .task-checkbox { width: 20px; height: 20px; border-radius: 4px; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
+            .task-item.done .task-checkbox { background: var(--status-online); border-color: var(--status-online); }
+            .task-item.done .task-checkbox::after { content: '✓'; color: white; font-size: 14px; font-weight: bold;}
+            .task-item.done span { text-decoration: line-through; color: var(--text-muted); }
 
-            .chat-input { padding: 20px; border-top: 1px solid var(--border-color); background: var(--bg-main); display: flex; gap: 12px; }
-            .chat-input input { flex: 1; padding: 15px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; color: white; outline: none; }
-            .chat-input input:focus { border-color: var(--primary-blue); }
-            .chat-input button { padding: 0 25px; background: var(--primary-blue); border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
-            .chat-input button:hover { background: var(--primary-hover); }
+            /* Program Modules */
+            .module-card { background: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); }
 
-            /* Scrollbars personalizados */
-            ::-webkit-scrollbar { width: 8px; }
-            ::-webkit-scrollbar-track { background: var(--bg-main); }
-            ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-            ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+            /* --- PANEL IA --- */
+            .chat-panel { width: 350px; background: var(--bg-panel); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
+            .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; font-size: 14px;}
+            .msg-javid { background: var(--bg-card); padding: 12px; border-left: 3px solid var(--primary-blue); border-radius: 6px; }
+            .msg-user { background: var(--primary-blue); padding: 12px; border-radius: 6px; align-self: flex-end; color: white; }
+            .chat-input { display: flex; padding: 15px; border-top: 1px solid var(--border-color); background: var(--bg-main);}
+            .chat-input input { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-panel); color: white; outline:none; }
+            .chat-input button { background: var(--primary-blue); color: white; border: none; padding: 0 15px; margin-left: 10px; border-radius: 6px; cursor: pointer;}
+            
         </style>
     </head>
     <body>
 
         <div id="login-screen" class="screen active">
-            <div class="login-container">
-                <h1>Ecosistema Fitness</h1>
-                <p>Ingreso Seguro - Plataforma Central</p>
-                
-                <div class="input-group">
-                    <label>Usuario Matriz</label>
-                    <input type="text" id="user-input" placeholder="Ej: cliente_vip">
-                </div>
-                <div class="input-group">
-                    <label>Código de Acceso</label>
-                    <input type="password" id="pass-input" placeholder="Ej: fitness2026">
-                </div>
-                
-                <button class="btn-primary" onclick="procesarLogin()">AUTENTICAR SISTEMA</button>
-                <div id="login-alert" class="error-box"></div>
+            <div class="login-box">
+                <h1 style="color:var(--primary-blue); margin-bottom:5px;">Ecosistema Digital</h1>
+                <p style="color:var(--text-muted); margin-bottom:20px; font-size:14px;">Centro de Transformación</p>
+                <input type="text" id="user-input" placeholder="Usuario (cliente_vip)">
+                <input type="password" id="pass-input" placeholder="Contraseña (fitness2026)">
+                <button onclick="login()">INGRESAR</button>
+                <div id="login-err" class="error-txt"></div>
             </div>
         </div>
 
-        <div id="dashboard-screen" class="screen">
+        <div id="dashboard-screen" class="screen" style="flex-direction:column;">
             
             <header>
                 <div class="ai-profile">
-                    <div class="avatar-wrapper">
-                        <div class="ring-online">
-                            <div class="avatar-img"></div>
-                        </div>
-                    </div>
+                    <div class="ring-online"><div class="avatar-img"></div></div>
                     <div class="ai-info">
                         <h2>Javid tech</h2>
-                        <span>Conectado y Operativo</span>
+                        <span>● IA Operativa y Analizando Progreso</span>
                     </div>
                 </div>
-                <button class="btn-outline" onclick="desconectar()">Cerrar Conexión</button>
+                <button style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:8px 15px; border-radius:6px; cursor:pointer;" onclick="location.reload()">Salir</button>
             </header>
 
-            <div class="main-content">
-                <nav class="sidebar">
-                    <div class="sidebar-title">Escalera de Valor</div>
-                    <div class="nav-item" id="nav-novatos" onclick="cargarNivel('novatos')">
-                        🌱 Nivel 1: Novatos
-                    </div>
-                    <div class="nav-item" id="nav-intermedio" onclick="cargarNivel('intermedio')">
-                        🔥 Nivel 2: Intermedio
-                    </div>
-                    <div class="nav-item" id="nav-avanzado" onclick="cargarNivel('avanzado')">
-                        🏆 Nivel 3: Avanzado
-                    </div>
-                </nav>
-
-                <main class="workspace" id="main-workspace">
-                    <div class="welcome-state">
-                        <h1>Bienvenido al Ecosistema</h1>
-                        <p>Selecciona tu etapa actual en el panel izquierdo para cargar la configuración.</p>
-                    </div>
-                </main>
-
-                <aside class="chat-panel">
-                    <div class="chat-header">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path></svg>
-                        Terminal AI
-                    </div>
-                    <div class="chat-messages" id="chat-box">
-                        <div class="msg msg-javid">
-                            <strong>Javid tech:</strong> Protocolos de seguridad superados. Soy el arquitecto de este ecosistema. ¿En qué nivel iniciaremos la transformación hoy?
+            <div class="main-layout">
+                <aside class="sidebar">
+                    <div class="nav-section">
+                        <div class="nav-item active" id="nav-feed" onclick="cargarFeed()">
+                            <span>📺 Retención Diaria (Feed)</span>
                         </div>
                     </div>
+
+                    <div class="nav-section" id="menu-programas">
+                        </div>
+
+                    <div class="progress-container">
+                        <div class="progress-title">
+                            <span>Progreso Global</span>
+                            <span id="porcentaje-txt" style="color:var(--status-online);">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="barra-progreso"></div>
+                        </div>
+                        <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px; text-align:center;">Calendario de Entrenamiento (Días)</p>
+                        <div class="calendar-grid" id="mini-calendario">
+                            </div>
+                    </div>
+                </aside>
+
+                <main class="workspace" id="main-workspace">
+                    </main>
+
+                <aside class="chat-panel">
+                    <div style="padding:15px; background:var(--bg-card); font-weight:bold; border-bottom:1px solid var(--border-color);">
+                        Asistente Virtual 
+                    </div>
+                    <div class="chat-messages" id="chat-box">
+                        <div class="msg-javid"><strong>Javid tech:</strong> Matriz conectada. Analizaré tu cumplimiento diario. ¿Qué duda técnica tienes hoy?</div>
+                    </div>
                     <div class="chat-input">
-                        <input type="text" id="chat-input-text" placeholder="Comando para Javid tech..." onkeypress="manejarTeclado(event)">
-                        <button onclick="transmitirMensaje()">❯</button>
+                        <input type="text" id="chat-input-text" placeholder="Escribe aquí..." onkeypress="if(event.key==='Enter') enviarMsg()">
+                        <button onclick="enviarMsg()">Enviar</button>
                     </div>
                 </aside>
             </div>
         </div>
 
         <script>
-            // Estado de la Aplicación
-            const AppState = {
-                token: null,
-                datosLocales: null,
-                nivelActivo: null
+            // --- ESTADO GLOBAL (GAMIFICACIÓN Y DATOS) ---
+            const App = {
+                datos: null,
+                vistaActual: 'feed',
+                // Simulamos el progreso del usuario (Día actual: 4)
+                estadoGamificacion: {
+                    diaActual: 4,
+                    tareasHoy: { entreno: false, nutricion: false, estiramiento: false, sueno: false },
+                    diasCompletados: 3 // Ya completó los 3 primeros días al 100%
+                }
             };
 
-            // 1. SISTEMA DE SEGURIDAD (Login)
-            async function procesarLogin() {
-                const user = document.getElementById('user-input').value;
-                const pass = document.getElementById('pass-input').value;
-                const alerta = document.getElementById('login-alert');
-                
-                alerta.style.color = '#60a5fa';
-                alerta.innerText = "Estableciendo conexión encriptada...";
-
+            // 1. LOGIN
+            async function login() {
+                const u = document.getElementById('user-input').value;
+                const p = document.getElementById('pass-input').value;
                 try {
-                    const response = await fetch('/api/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: user, password: pass })
-                    });
-                    
-                    const data = await response.json();
-                    
+                    const res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p})});
+                    const data = await res.json();
                     if(data.success) {
-                        AppState.token = data.token;
                         document.getElementById('login-screen').classList.remove('active');
                         document.getElementById('dashboard-screen').classList.add('active');
-                        obtenerEcosistema();
+                        obtenerDatos();
                     } else {
-                        alerta.style.color = '#ef4444';
-                        alerta.innerText = data.message;
+                        document.getElementById('login-err').innerText = data.message;
                     }
-                } catch (e) {
-                    alerta.style.color = '#ef4444';
-                    alerta.innerText = "Error crítico de servidor. ¿El backend está corriendo?";
-                }
+                } catch(e) { document.getElementById('login-err').innerText = "Error de conexión."; }
             }
 
-            // 2. RECUPERACIÓN DE DATOS (Escalera de Valor)
-            async function obtenerEcosistema() {
-                try {
-                    const res = await fetch('/api/programas');
-                    AppState.datosLocales = await res.json();
-                } catch (e) {
-                    insertarChat("Error al descargar la base de datos de programas.", "system");
-                }
+            // 2. OBTENER DATOS (CMS)
+            async function obtenerDatos() {
+                const res = await fetch('/api/datos-plataforma');
+                App.datos = await res.json();
+                renderMenuProgramas();
+                actualizarCentroProgreso();
+                cargarFeed(); // Carga inicial
             }
 
-            // 3. RENDERIZADO DEL ESPACIO DE TRABAJO (UI)
-            function cargarNivel(llaveNivel) {
-                if(!AppState.datosLocales) return;
+            // 3. RENDERIZADO DEL MENÚ Y DESBLOQUEOS
+            function renderMenuProgramas() {
+                const menu = document.getElementById('menu-programas');
+                menu.innerHTML = '<div style="font-size:11px; color:#9ca3af; text-transform:uppercase; margin-bottom:10px; font-weight:800;">Escalera de Valor</div>';
                 
-                AppState.nivelActivo = llaveNivel;
-                const info = AppState.datosLocales[llaveNivel];
-                
-                // Efecto visual en Sidebar
+                Object.values(App.datos.programas).forEach(prog => {
+                    const isLocked = prog.estado === "bloqueado";
+                    const lockIcon = isLocked ? '<span class="lock-icon">🔒 Bloqueado</span>' : '';
+                    menu.innerHTML += \`
+                        <div class="nav-item \${isLocked ? 'locked' : ''}" id="nav-\${prog.id}" 
+                             onclick="\${isLocked ? 'mostrarAlertaBloqueo()' : \`cargarPrograma('\${prog.id}')\`}">
+                            <span>\${prog.titulo}</span> \${lockIcon}
+                        </div>
+                    \`;
+                });
+            }
+
+            function mostrarAlertaBloqueo() {
+                addChat("Intentas acceder a un nivel superior. Debes completar el 100% de la barra de progreso de tu nivel actual para que yo autorice el desbloqueo.", "javid");
+            }
+
+            // 4. RENDER FEED DE RETENCIÓN
+            function cargarFeed() {
+                App.vistaActual = 'feed';
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                document.getElementById('nav-' + llaveNivel).classList.add('active');
+                document.getElementById('nav-feed').classList.add('active');
 
-                // Render de la información
-                const workspace = document.getElementById('main-workspace');
-                
-                const cardsHTML = info.modulos.map((mod, indice) => \`
-                    <div class="module-card">
-                        <h3>M\${indice + 1}: \${mod.titulo}</h3>
-                        <p>\${mod.desc}</p>
-                        <button onclick="accionModulo('\${mod.titulo}')">Abrir Módulo</button>
+                const feed = App.datos.feed;
+                document.getElementById('main-workspace').innerHTML = \`
+                    <h1 style="margin-bottom:20px; font-size:28px;">Centro de Retención Diario</h1>
+                    <div class="feed-grid">
+                        <div class="video-card">
+                            <h3 style="margin-bottom:10px; color:var(--primary-blue);">Video del Día: \${feed.video.titulo}</h3>
+                            <iframe src="\${feed.video.url}" allowfullscreen></iframe>
+                            <p style="color:var(--text-muted); margin-top:10px;">\${feed.video.desc}</p>
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                            <div class="content-card">
+                                <h3>🎧 \${feed.audio.titulo}</h3>
+                                <p style="color:var(--text-muted); font-size:13px; margin:10px 0;">Duración: \${feed.audio.duracion}</p>
+                                <button style="padding:8px 15px; background:var(--primary-blue); border:none; border-radius:6px; color:white; cursor:pointer;">Reproducir Audio</button>
+                            </div>
+                            <div class="content-card">
+                                <h3>📄 \${feed.articulos[0].titulo}</h3>
+                                <p style="color:var(--text-muted); font-size:13px; margin:10px 0;">Tiempo lectura: \${feed.articulos[0].lectura}</p>
+                                <button style="padding:8px 15px; background:transparent; border:1px solid var(--primary-blue); border-radius:6px; color:var(--primary-blue); cursor:pointer;">Leer Artículo</button>
+                            </div>
+                        </div>
                     </div>
-                \`).join('');
+                \`;
+            }
 
-                workspace.innerHTML = \`
-                    <div class="program-header">
-                        <div class="badge">\${info.enfoque}</div>
-                        <h1>\${info.titulo}</h1>
-                        <p>\${info.descripcion}</p>
-                    </div>
-                    <div class="modules-grid">
-                        \${cardsHTML}
+            // 5. RENDER PROGRAMA Y CHECKLIST DIARIO (GAMIFICACIÓN)
+            function cargarPrograma(id) {
+                App.vistaActual = id;
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.getElementById('nav-' + id).classList.add('active');
+
+                const prog = App.datos.programas[id];
+                const ts = App.estadoGamificacion.tareasHoy;
+
+                // Crear HTML del Checklist
+                const checklistHTML = \`
+                    <div class="checklist-panel">
+                        <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Tu Misión de Hoy (Día \${App.estadoGamificacion.diaActual})</h3>
+                        <p style="color:var(--text-muted); margin-bottom:15px; font-size:14px;">Tacha todas las tareas para iluminar tu día en el calendario.</p>
+                        <div class="task-item \${ts.entreno ? 'done' : ''}" onclick="toggleTarea('entreno')">
+                            <div class="task-checkbox"></div> <span>💪 Completar Entrenamiento Diario</span>
+                        </div>
+                        <div class="task-item \${ts.nutricion ? 'done' : ''}" onclick="toggleTarea('nutricion')">
+                            <div class="task-checkbox"></div> <span>🥗 Cumplir Método de Alimentación</span>
+                        </div>
+                        <div class="task-item \${ts.estiramiento ? 'done' : ''}" onclick="toggleTarea('estiramiento')">
+                            <div class="task-checkbox"></div> <span>🧘‍♂️ Sesión de Estiramiento (10 min)</span>
+                        </div>
+                        <div class="task-item \${ts.sueno ? 'done' : ''}" onclick="toggleTarea('sueno')">
+                            <div class="task-checkbox"></div> <span>💤 Higiene del Sueño (Dormir a tiempo)</span>
+                        </div>
                     </div>
                 \`;
 
-                // Notificar al Sistema AI
-                insertarChat(\`Cargando interfaz operativa del nivel: \${llaveNivel.toUpperCase()}\`, 'system');
-                solicitarAsistencia("Cambio_De_Contexto", true);
+                let modulosHTML = prog.modulos.map((m,i) => \`
+                    <div class="module-card"><h4>M\${i+1}: \${m.titulo}</h4><p style="color:var(--text-muted); font-size:14px; margin-top:5px;">\${m.desc}</p></div>
+                \`).join('');
+
+                document.getElementById('main-workspace').innerHTML = \`
+                    <h1 style="font-size:32px; margin-bottom:5px;">\${prog.titulo}</h1>
+                    <p style="color:var(--text-muted); margin-bottom:30px;">\${prog.enfoque}</p>
+                    \${checklistHTML}
+                    <h3 style="margin-bottom:15px;">Manuales y Módulos</h3>
+                    \${modulosHTML}
+                \`;
             }
 
-            // 4. MOTOR DEL ASISTENTE VIRTUAL (Javid tech)
-            function manejarTeclado(e) {
-                if(e.key === 'Enter') transmitirMensaje();
-            }
-
-            async function transmitirMensaje() {
-                const caja = document.getElementById('chat-input-text');
-                const texto = caja.value.trim();
-                if(!texto) return;
-
-                insertarChat(texto, 'user');
-                caja.value = '';
-
-                await solicitarAsistencia(texto, false);
-            }
-
-            async function solicitarAsistencia(msj, oculto) {
-                try {
-                    const req = await fetch('/api/javid-tech/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            userMessage: msj, 
-                            programaActual: AppState.nivelActivo 
-                        })
-                    });
-                    const res = await req.json();
-                    
-                    if(res.javidReply) {
-                        insertarChat(res.javidReply, 'javid');
-                    }
-                } catch (e) {
-                    insertarChat("Conexión perdida con el cerebro de Javid tech.", 'javid');
-                }
-            }
-
-            function accionModulo(nombre) {
-                insertarChat(\`Accediendo al módulo: \${nombre}\`, 'user');
-                setTimeout(() => {
-                    insertarChat(\`Permisos concedidos para \${nombre}. Desplegando manuales y videos. ¿Alguna duda sobre este pilar?\`, 'javid');
-                }, 800);
-            }
-
-            function insertarChat(texto, autor) {
-                const panel = document.getElementById('chat-box');
-                const div = document.createElement('div');
-                div.className = \`msg msg-\${autor}\`;
+            // 6. LÓGICA DE GAMIFICACIÓN (CHECKLIST Y BARRA)
+            function toggleTarea(tarea) {
+                // Invertir estado de la tarea
+                App.estadoGamificacion.tareasHoy[tarea] = !App.estadoGamificacion.tareasHoy[tarea];
                 
-                if(autor === 'javid') {
-                    div.innerHTML = \`<strong>Javid tech:</strong> <br>\${texto}\`;
-                } else if(autor === 'user') {
-                    div.innerText = texto;
-                } else {
-                    div.innerText = \`--- \${texto} ---\`;
+                // Si el usuario marcó una tarea, informar a Javid tech
+                if(App.estadoGamificacion.tareasHoy[tarea]) {
+                    enviarMsgIA_Silenciosa("He completado la tarea de: " + tarea);
                 }
 
-                panel.appendChild(div);
-                panel.scrollTop = panel.scrollHeight; // Auto-scroll
+                // Verificar si se completaron TODAS las tareas de hoy
+                const todasCompletas = Object.values(App.estadoGamificacion.tareasHoy).every(v => v === true);
+                
+                if (todasCompletas && App.estadoGamificacion.diaActual === (App.estadoGamificacion.diasCompletados + 1)) {
+                    // Completó el día! Aumentamos los días completados
+                    App.estadoGamificacion.diasCompletados++;
+                    // Pequeño truco visual para resetear al día siguiente (simulación)
+                    setTimeout(() => {
+                        App.estadoGamificacion.diaActual++;
+                        Object.keys(App.estadoGamificacion.tareasHoy).forEach(k => App.estadoGamificacion.tareasHoy[k] = false);
+                        if(App.vistaActual !== 'feed') cargarPrograma(App.vistaActual);
+                        actualizarCentroProgreso();
+                        addChat("¡Día completado al 100%! He iluminado tu calendario en verde. Prepárate para mañana.", "javid");
+                    }, 1500);
+                }
+
+                // Recargar interfaz de programa para mostrar el tachado
+                cargarPrograma(App.vistaActual);
+                actualizarCentroProgreso();
             }
 
-            function desconectar() {
-                window.location.reload();
+            function actualizarCentroProgreso() {
+                const totalDiasPrograma = App.datos.programas.novatos.diasTotales; // 28 días
+                let diasListos = App.estadoGamificacion.diasCompletados;
+                
+                // Calcular tareas de hoy parciales para sumarlas a la barra
+                const tareasHechas = Object.values(App.estadoGamificacion.tareasHoy).filter(v=>v).length;
+                const fraccionHoy = tareasHechas / 4; // 4 tareas por día
+                
+                const progresoTotal = ((diasListos + fraccionHoy) / totalDiasPrograma) * 100;
+                
+                document.getElementById('barra-progreso').style.width = progresoTotal + '%';
+                document.getElementById('porcentaje-txt').innerText = Math.floor(progresoTotal) + '%';
+
+                // Lógica de Desbloqueo Maestro
+                if (Math.floor(progresoTotal) >= 100 && App.datos.programas.intermedio.estado === "bloqueado") {
+                    App.datos.programas.intermedio.estado = "desbloqueado";
+                    renderMenuProgramas();
+                    addChat("¡ALERTA DE SISTEMA! Has alcanzado el 100%. Nivel Intermedio DESBLOQUEADO automáticamente.", "javid");
+                }
+
+                // Renderizar Mini Calendario Heatmap
+                const cal = document.getElementById('mini-calendario');
+                cal.innerHTML = '';
+                for(let i=1; i<=totalDiasPrograma; i++) {
+                    let clase = "cal-day";
+                    if (i <= diasListos) clase += " completed"; // Días pasados completos
+                    else if (i === App.estadoGamificacion.diaActual) clase += " today"; // Día de hoy
+                    
+                    cal.innerHTML += \`<div class="\${clase}">\${i}</div>\`;
+                }
+            }
+
+            // 7. SISTEMA DE CHAT JAVID TECH
+            async function enviarMsg() {
+                const input = document.getElementById('chat-input-text');
+                const txt = input.value.trim();
+                if(!txt) return;
+                addChat(txt, "user");
+                input.value = '';
+                
+                const res = await fetch('/api/javid-tech/chat', { method: 'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userMessage: txt, contexto: App.vistaActual})});
+                const data = await res.json();
+                addChat(data.javidReply, "javid");
+            }
+
+            async function enviarMsgIA_Silenciosa(txt) {
+                const res = await fetch('/api/javid-tech/chat', { method: 'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userMessage: txt, contexto: App.vistaActual})});
+                const data = await res.json();
+                addChat(data.javidReply, "javid");
+            }
+
+            function addChat(txt, role) {
+                const b = document.getElementById('chat-box');
+                b.innerHTML += \`<div class="msg-\${role}">\${role==='javid'?'<strong>Javid tech:</strong><br>':''}\${txt}</div>\`;
+                b.scrollTop = b.scrollHeight;
             }
         </script>
     </body>
@@ -466,15 +490,8 @@ app.get('/', (req, res) => {
     `);
 });
 
-// ==========================================
-// 4. INICIALIZACIÓN DE LA NUBE (SERVER)
-// ==========================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log("=================================================================");
-    console.log("🚀 ECOSISTEMA DIGITAL FITNESS DESPLEGADO CON ÉXITO");
-    console.log("👔 Avatar Javid tech: ONLINE y Operativo.");
-    console.log("📚 Escalera de Valor: Novatos, Intermedio, Avanzado -> CARGADOS.");
-    console.log(`🌐 Servidor escuchando en el puerto: ${PORT}`);
-    console.log("=================================================================");
+    console.log("🚀 MATRIZ V3: GAMIFICACIÓN Y FEED ACTIVADOS.");
+    console.log(`🌐 Servidor: Puerto ${PORT}`);
 });

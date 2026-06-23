@@ -1,8 +1,8 @@
 /**
  * ==============================================================================
- * SISTEMA MAESTRO V10.0 ÉLITE - JAVID MENDOZA COACH
- * Arquitectura Integral: API REST, Autenticación JWT, CMS y Gamificación (SPA).
- * Optimizado para Node.js >= 16.x
+ * SISTEMA MAESTRO V11.0 OMNIVERSO - JAVID MENDOZA COACH
+ * Arquitectura: SPA Expandible, CMS Dinámico (Modo Dios), Matriz de 84 Días
+ * Desarrolladores: Ricardo & IA Architect
  * ==============================================================================
  */
 
@@ -13,598 +13,378 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-
-// --- 1. MIDDLEWARES & CONFIGURACIÓN DE SEGURIDAD ---
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Capacidad ampliada para guardar JSONs gigantes
+app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-const SECRET_KEY = "JavidMendoza_Matriz_V10_UltraSecureKey_2026";
+const SECRET_KEY = "JavidMendoza_Matriz_V11_GodMode_2026";
 const DB_FILE = path.join(__dirname, 'database.json');
 
-// --- 2. MOTOR DE PERSISTENCIA ATÓMICA ---
-// Garantiza que la lectura y escritura de tus 1600+ líneas sea segura
-function getDatabase() {
-    try {
-        const data = fs.readFileSync(DB_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        console.error("🔥 Error crítico leyendo database.json:", error);
-        return null;
+// --- 1. GENERADOR DE BASE DE DATOS SEMILLA (ESTRUCTURA V11) ---
+// Si el JSON no existe o está viejo, el motor inyecta esta estructura preparada para 84 días
+function inicializarDB() {
+    if (!fs.existsSync(DB_FILE)) {
+        const seed = {
+            config: { colorPrimario: "#D4AF37", marca: "Javid Mendoza Coach" },
+            usuarios: [
+                { id: 1, username: "javid_admin", password: "mododios", rol: "admin", nombre: "Javid Mendoza" },
+                { id: 2, username: "ricardo_dev", password: "mododios", rol: "admin", nombre: "Ricardo (Dev)" },
+                { id: 3, username: "kelly_g", password: "fitness2026", rol: "alumno", nombre: "Kelly González", programaActivo: "novatos" },
+                { id: 4, username: "andres_v", password: "fitness2026", rol: "alumno", nombre: "Andrés Villar", programaActivo: "intermedio" }
+            ],
+            posts: [
+                { id: 1, fecha: "2026-06-23", titulo: "Bienvenidos al Ecosistema V11", contenido: "La disciplina es el puente entre tus metas y tus logros. Cero excusas.", video: "https://www.youtube.com/embed/Q1anc5MN8KM" }
+            ],
+            programas: {
+                novatos: {
+                    titulo: "Novatos (Fase de Arranque)",
+                    descripcion: "Elimina miedos y construye el hábito.",
+                    tarjetas: {
+                        nutricion: { titulo: "Nutrición Inteligente", contenido: "Método visual de las manos. Sin contar calorías, priorizando desinflamar el cuerpo. Cero azúcar.", pdf: "#" },
+                        entrenamiento: { titulo: "Gravedad Cero", contenido: "100% en casa. Domina tu peso corporal antes de tocar una pesa.", pdf: "#" },
+                        mindset: { titulo: "Mentalidad de Acero", contenido: "Regla del 1%. Pequeñas victorias diarias.", pdf: "#" }
+                    }
+                }
+                // Intermedio y Avanzado seguirían la misma lógica
+            },
+            cache_diario: {} // Guarda { userId: { "novatos": { "dia_1": { entreno: true, dieta: false } } } }
+        };
+        fs.writeFileSync(DB_FILE, JSON.stringify(seed, null, 2));
     }
 }
+inicializarDB();
 
-function saveDatabase(db) {
-    try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
-        return true;
-    } catch (error) {
-        console.error("🔥 Error crítico guardando database.json:", error);
-        return false;
-    }
-}
+function getDatabase() { return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
+function saveDatabase(db) { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); return true; }
 
-// --- 3. MIDDLEWARE DE AUTENTICACIÓN JWT ---
+// --- 2. MIDDLEWARES ---
 function verificarToken(req, res, next) {
-    const bearerHeader = req.headers['authorization'];
-    if (typeof bearerHeader !== 'undefined') {
-        const bearer = bearerHeader.split(' ');
-        const bearerToken = bearer[1];
-        jwt.verify(bearerToken, SECRET_KEY, (err, authData) => {
-            if (err) return res.status(403).json({ success: false, message: 'Token inválido o expirado' });
-            req.usuarioAuth = authData;
-            next();
-        });
-    } else {
-        res.status(403).json({ success: false, message: 'Acceso Denegado. Token no proporcionado.' });
-    }
+    const bearer = req.headers['authorization'];
+    if (!bearer) return res.status(403).json({ error: 'Denegado' });
+    jwt.verify(bearer.split(' ')[1], SECRET_KEY, (err, data) => {
+        if (err) return res.status(403).json({ error: 'Token Inválido' });
+        req.user = data; next();
+    });
 }
 
-// --- 4. ENDPOINTS API RESTFUL ---
-
-// Endpoint: Autenticación
-app.post('/api/auth/login', (req, res) => {
+// --- 3. ENDPOINTS API ---
+app.post('/api/login', (req, res) => {
     const db = getDatabase();
-    if (!db) return res.status(500).json({ success: false, message: "Error de servidor" });
-
-    const { username, password } = req.body;
-    const user = db.usuarios.find(u => u.username === username && u.password === password);
-    
+    const user = db.usuarios.find(u => u.username === req.body.username && u.password === req.body.password);
     if (user) {
-        // Firmamos el token por 7 días para que el alumno no tenga que loguearse a diario
-        const token = jwt.sign({ id: user.id, rol: user.rol }, SECRET_KEY, { expiresIn: '7d' });
-        // No enviamos la contraseña al frontend por seguridad
-        const { password: _, ...usuarioSeguro } = user; 
-        res.json({ success: true, token, usuario: usuarioSeguro });
-    } else {
-        res.status(401).json({ success: false, message: "Credenciales de élite incorrectas." });
-    }
+        const token = jwt.sign({ id: user.id, rol: user.rol, nombre: user.nombre }, SECRET_KEY, { expiresIn: '7d' });
+        res.json({ success: true, token, user: { id: user.id, nombre: user.nombre, rol: user.rol, programa: user.programaActivo } });
+    } else res.status(401).json({ success: false });
 });
 
-// Endpoint: Obtener Ecosistema Completo (Protegido)
-app.get('/api/ecosistema/datos', verificarToken, (req, res) => {
+app.get('/api/data', verificarToken, (req, res) => res.json(getDatabase()));
+
+app.post('/api/progreso', verificarToken, (req, res) => {
+    const { progId, dia, task, valor } = req.body;
     const db = getDatabase();
-    res.json(db);
+    const uid = req.user.id;
+    
+    if (!db.cache_diario[uid]) db.cache_diario[uid] = {};
+    if (!db.cache_diario[uid][progId]) db.cache_diario[uid][progId] = {};
+    if (!db.cache_diario[uid][progId][dia]) db.cache_diario[uid][progId][dia] = {};
+    
+    db.cache_diario[uid][progId][dia][task] = valor;
+    saveDatabase(db);
+    res.json({ success: true, cache: db.cache_diario[uid] });
 });
 
-// Endpoint: Guardar Gamificación / Checklists (Protegido)
-app.post('/api/ecosistema/progreso', verificarToken, (req, res) => {
-    const { userId, fecha, moduloKey, taskIndex, valor } = req.body;
-    
-    // Validar que el usuario solo modifique su propio caché (o si es admin)
-    if (req.usuarioAuth.id !== userId && req.usuarioAuth.rol !== 'admin') {
-        return res.status(403).json({ success: false, message: 'Operación no autorizada.' });
-    }
-
+app.post('/api/godmode/post', verificarToken, (req, res) => {
+    if (req.user.rol !== 'admin') return res.status(403).json({ error: 'No admin' });
     const db = getDatabase();
-    if (!db.cache_usuarios[userId]) db.cache_usuarios[userId] = {};
-    if (!db.cache_usuarios[userId][fecha]) db.cache_usuarios[userId][fecha] = {};
-    if (!db.cache_usuarios[userId][fecha][moduloKey]) db.cache_usuarios[userId][fecha][moduloKey] = {};
-    
-    db.cache_usuarios[userId][fecha][moduloKey][taskIndex] = valor;
-    
-    if (saveDatabase(db)) {
-        res.json({ success: true, cacheDia: db.cache_usuarios[userId][fecha] });
-    } else {
-        res.status(500).json({ success: false, message: "Error al sincronizar matriz." });
-    }
+    db.posts.unshift({ id: Date.now(), fecha: new Date().toISOString().split('T')[0], ...req.body });
+    saveDatabase(db);
+    res.json({ success: true });
 });
 
-// Endpoint: Modo Dios CMS - Sobreescribir Data (Protegido - Solo Admin)
-app.post('/api/admin/actualizar', verificarToken, (req, res) => {
-    if (req.usuarioAuth.rol !== 'admin') {
-        return res.status(403).json({ success: false, message: 'Requiere privilegios MODO DIOS.' });
-    }
-
-    const db = getDatabase();
-    db.feed = req.body.feed;
-    db.programas = req.body.programas;
-    
-    if (saveDatabase(db)) {
-        res.json({ success: true, message: "Matriz global actualizada con éxito." });
-    } else {
-        res.status(500).json({ success: false, message: "Error en inyección de código." });
-    }
-});
-
-// --- 5. FRONTEND SPA MASIFICADO (Renderizado de Motor) ---
+// --- 4. RENDERIZADOR FRONTEND MASIVO (UI/UX PRO MAX) ---
 app.get('/', (req, res) => {
     res.send(`
     <!DOCTYPE html>
     <html lang="es">
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Plataforma Élite | Javid Mendoza Coach</title>
+        <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Plataforma Élite | Javid Mendoza</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
         <style>
-            /* --- SISTEMA DE DISEÑO PRO MAX --- */
-            :root { 
-                --bg-main: #030303; 
-                --bg-panel: rgba(10, 10, 10, 0.95); 
-                --bg-card: #0d0d0d; 
-                --border-light: #222222; 
-                --gold-primary: #D4AF37; 
-                --gold-hover: #f2ce5c;
-                --text-main: #f5f5f5; 
-                --text-muted: #888888; 
-                --success: #10b981;
-                --danger: #ef4444;
-            }
-            
-            * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
-            body { background: var(--bg-main); color: var(--text-main); overflow-x: hidden; }
-            ::-webkit-scrollbar { width: 8px; }
-            ::-webkit-scrollbar-track { background: var(--bg-main); }
-            ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
-            ::-webkit-scrollbar-thumb:hover { background: var(--gold-primary); }
-            
+            :root { --bg: #030303; --card: #0a0a0a; --border: #222; --gold: #D4AF37; --text: #f5f5f5; --muted: #888; }
+            * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+            body { background: var(--bg); color: var(--text); overflow-x: hidden; }
             .hidden { display: none !important; }
-            button { cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); outline: none; border: none; }
-            input, textarea { font-family: 'Inter', sans-serif; transition: 0.3s; }
             
-            /* --- HEADER GLASSMORPHISM --- */
-            header { display: flex; justify-content: space-between; align-items: center; padding: 20px 50px; background: rgba(5,5,5,0.8); border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
-            .brand-logo { font-size: 24px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
-            .brand-logo span { color: var(--gold-primary); }
+            /* Utilidades UI */
+            .btn { background: var(--gold); color: #000; padding: 12px 24px; font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; border-radius: 4px; transition: 0.3s; }
+            .btn:hover { box-shadow: 0 0 15px rgba(212,175,55,0.4); transform: translateY(-2px); }
+            .btn-outline { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+            .input { width: 100%; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; margin-bottom: 15px; border-radius: 4px; }
             
-            /* --- COMPONENTES UI --- */
-            .btn-gold { background: var(--gold-primary); color: #000; padding: 16px 32px; font-weight: 800; border-radius: 4px; text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); }
-            .btn-gold:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); }
-            .btn-outline { background: transparent; border: 1px solid var(--gold-primary); color: var(--gold-primary); padding: 14px 28px; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-            .btn-outline:hover { background: rgba(212, 175, 55, 0.1); }
+            /* Header */
+            header { display: flex; justify-content: space-between; padding: 20px 40px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+            .logo { font-weight: 900; font-size: 24px; cursor: pointer; letter-spacing: 1px; }
+            .logo span { color: var(--gold); }
             
-            main { padding: 50px; max-width: 1600px; margin: 0 auto; min-height: 100vh; }
+            /* Layout Principal */
+            main { padding: 40px; max-width: 1400px; margin: 0 auto; }
             
-            /* --- LOGIN SCREEN --- */
-            #login-screen { position: fixed; inset: 0; background: radial-gradient(circle at center, #111 0%, #000 100%); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-            .login-container { background: var(--bg-card); padding: 60px; border-radius: 12px; border: 1px solid var(--border-light); width: 100%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; position: relative; overflow: hidden; }
-            .login-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold-primary), transparent); }
-            .login-input { width: 100%; padding: 18px; margin-bottom: 25px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); color: white; border-radius: 6px; font-size: 16px; }
-            .login-input:focus { border-color: var(--gold-primary); outline: none; background: rgba(255,255,255,0.05); }
+            /* Feed / Home */
+            .feed-grid { display: grid; gap: 30px; }
+            .post-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 12px; }
+            
+            /* Tarjetas Expandibles de Programas */
+            .expandable-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 15px; overflow: hidden; transition: 0.3s; }
+            .card-header { padding: 20px; display: flex; justify-content: space-between; cursor: pointer; font-weight: 800; color: var(--gold); text-transform: uppercase; }
+            .card-header:hover { background: rgba(255,255,255,0.02); }
+            .card-body { padding: 0 20px; max-height: 0; overflow: hidden; transition: all 0.4s ease-out; }
+            .expandable-card.active .card-body { padding: 20px; max-height: 1000px; border-top: 1px dashed var(--border); }
+            
+            /* Matriz 84 Días */
+            .matrix-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; margin-top: 30px; }
+            .day-btn { aspect-ratio: 1; background: #111; border: 1px solid var(--border); color: var(--muted); display: flex; align-items: center; justify-content: center; font-weight: 800; cursor: pointer; border-radius: 6px; transition: 0.3s; }
+            .day-btn:hover { border-color: var(--gold); color: white; }
+            .day-btn.completed { background: rgba(212,175,55,0.15); border-color: var(--gold); color: var(--gold); }
+            
+            /* Modal Diario (El Checklist) */
+            .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
+            .modal-content { background: var(--card); border: 1px solid var(--gold); padding: 40px; border-radius: 12px; width: 90%; max-width: 500px; position: relative; }
+            .close-modal { position: absolute; top: 15px; right: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+            
+            .checklist-item { display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
+            .checklist-item.active { border-color: var(--gold); background: rgba(212,175,55,0.05); }
+            .check-box { width: 20px; height: 20px; border: 2px solid var(--gold); border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+            .checklist-item.active .check-box { background: var(--gold); }
+            .checklist-item.active .check-box::after { content: '✓'; color: black; font-size: 14px; font-weight: 900; }
 
-            /* --- DASHBOARD & TARJETAS --- */
-            .hero-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: center; margin-bottom: 80px; }
-            .video-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 16px; overflow: hidden; border: 1px solid var(--border-light); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
-            .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-            
-            .escalera-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; }
-            .program-card { background: linear-gradient(145deg, var(--bg-card) 0%, #080808 100%); border: 1px solid var(--border-light); border-radius: 16px; padding: 40px; transition: 0.4s; position: relative; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; min-height: 320px; }
-            .program-card::after { content: '↗'; position: absolute; top: 30px; right: 30px; font-size: 24px; color: var(--border-light); transition: 0.4s; }
-            .program-card:hover { transform: translateY(-8px); border-color: var(--gold-primary); box-shadow: 0 15px 35px rgba(212, 175, 55, 0.08); }
-            .program-card:hover::after { color: var(--gold-primary); transform: translate(5px, -5px); }
-
-            /* --- MÓDULOS Y GAMIFICACIÓN --- */
-            .module-wrapper { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-light); padding: 40px; margin-bottom: 30px; }
-            .module-content h3 { color: var(--gold-primary); margin: 20px 0 10px 0; font-size: 20px; }
-            .module-content p { color: var(--text-muted); line-height: 1.8; margin-bottom: 15px; font-size: 15px; }
-            
-            .checklist-box { background: rgba(0,0,0,0.3); border: 1px dashed var(--border-light); border-radius: 8px; padding: 25px; margin-top: 30px; }
-            .task-item { display: flex; align-items: center; gap: 15px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
-            .task-item:hover { border-color: var(--border-light); background: rgba(255,255,255,0.05); }
-            .task-box { width: 24px; height: 24px; border: 2px solid var(--gold-primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-            .task-item.completed .task-box { background: var(--gold-primary); }
-            .task-item.completed .task-box::after { content: '✓'; color: #000; font-weight: 900; font-size: 14px; }
-            .task-item.completed span { text-decoration: line-through; color: var(--text-muted); }
-
-            /* --- PANEL LATERAL (ESTADO FÍSICO) --- */
-            .side-panel { position: fixed; top: 0; right: -500px; width: 450px; height: 100vh; background: var(--bg-panel); border-left: 1px solid var(--border-light); z-index: 1001; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); padding: 40px; overflow-y: auto; backdrop-filter: blur(20px); }
-            .side-panel.active { right: 0; }
-            
-            .progress-container { background: rgba(255,255,255,0.02); padding: 25px; border-radius: 12px; border: 1px solid var(--border-light); margin-top: 30px; }
-            .progress-track { height: 6px; background: #222; border-radius: 10px; overflow: hidden; margin-top: 15px; }
-            .progress-fill { height: 100%; background: var(--gold-primary); width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--gold-primary); }
-            
-            .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 20px; }
-            .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; background: #111; border-radius: 6px; color: #555; transition: 0.3s; }
-            .cal-day.active { background: rgba(212, 175, 55, 0.1); color: var(--gold-primary); border: 1px solid var(--gold-primary); }
-            .cal-day.today { border-bottom: 3px solid var(--text-main); color: white; }
+            /* Modo Dios */
+            .god-panel { display: grid; grid-template-columns: 250px 1fr; gap: 30px; }
+            .god-menu button { display: block; width: 100%; text-align: left; background: none; border: none; color: var(--muted); padding: 15px; cursor: pointer; font-weight: 600; border-left: 2px solid transparent; }
+            .god-menu button:hover, .god-menu button.active { color: var(--gold); border-left-color: var(--gold); background: rgba(255,255,255,0.02); }
 
         </style>
     </head>
     <body>
 
-        <div id="login-screen">
-            <div class="login-container">
-                <h1 style="font-size: 32px; font-weight: 900; margin-bottom: 5px;">JAVID <span style="color:var(--gold-primary)">MENDOZA</span></h1>
-                <p style="color: var(--text-muted); font-size: 12px; letter-spacing: 5px; text-transform: uppercase; margin-bottom: 40px;">Ecosistema Digital</p>
-                
-                <input type="text" id="username" class="login-input" placeholder="Usuario Asignado">
-                <input type="password" id="password" class="login-input" placeholder="Contraseña de Acceso">
-                
-                <button class="btn-gold" style="width: 100%; margin-top: 10px;" onclick="iniciarSesion()">Ingresar a la Matriz</button>
-                <p id="login-error" style="color: var(--danger); font-size: 14px; margin-top: 20px; min-height: 20px;"></p>
+        <div id="login-screen" style="height: 100vh; display: flex; justify-content: center; align-items: center;">
+            <div style="background: var(--card); padding: 50px; border: 1px solid var(--border); border-radius: 8px; width: 400px; text-align: center;">
+                <h1 class="logo" style="margin-bottom: 30px;">JAVID <span>MENDOZA</span></h1>
+                <input type="text" id="log-user" class="input" placeholder="Usuario">
+                <input type="password" id="log-pass" class="input" placeholder="Contraseña">
+                <button class="btn" style="width: 100%;" onclick="login()">Acceder a la Matriz</button>
             </div>
         </div>
 
-        <div id="app-container" class="hidden">
+        <div id="app" class="hidden">
             <header>
-                <div class="brand-logo" onclick="renderHub()">JAVID <span>MENDOZA</span></div>
-                <div style="display: flex; gap: 20px; align-items: center;">
-                    <button id="btn-godmode" class="btn-outline hidden" onclick="renderAdmin()">⚙️ MODO DIOS</button>
-                    <div onclick="togglePanel()" style="display:flex; align-items:center; gap:12px; cursor:pointer; background: var(--bg-card); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--border-light);">
-                        <div style="text-align: right;">
-                            <div id="ui-username" style="font-size: 14px; font-weight: 600; color: white;">Usuario</div>
-                            <div id="ui-role" style="font-size: 11px; color: var(--gold-primary); text-transform: uppercase; letter-spacing: 1px;">Rol</div>
-                        </div>
-                        <div id="ui-avatar" style="width: 36px; height: 36px; background: var(--gold-primary); border-radius: 50%; display:flex; align-items:center; justify-content:center; color:black; font-weight:900;">--</div>
-                    </div>
+                <div class="logo" onclick="renderHome()">JAVID <span>MENDOZA</span></div>
+                <div style="display: flex; gap: 15px;">
+                    <button id="btn-god" class="btn btn-outline hidden" onclick="renderGodMode()">MODO DIOS ⚙️</button>
+                    <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444;" onclick="logout()">Salir</button>
                 </div>
             </header>
+            <main id="main-content"></main>
+        </div>
 
-            <aside id="side-panel" class="side-panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
-                    <h2 style="font-size: 24px; color: white;">Biofeedback</h2>
-                    <button onclick="togglePanel()" style="background: transparent; color: white; font-size: 30px;">×</button>
-                </div>
-                <div id="panel-gamificacion">
-                    </div>
-                <button class="btn-outline" style="width: 100%; border-color: var(--danger); color: var(--danger); margin-top: 40px;" onclick="cerrarSesion()">Desconectar</button>
-            </aside>
-
-            <main id="main-view"></main>
+        <div id="day-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <button class="close-modal" onclick="document.getElementById('day-modal').classList.add('hidden')">×</button>
+                <h2 id="modal-title" style="color: var(--gold); margin-bottom: 20px;">DÍA X</h2>
+                <div id="modal-checklist"></div>
+            </div>
         </div>
 
         <script>
-            // --- ESTADO GLOBAL ---
-            const state = {
-                token: localStorage.getItem('elite_token') || null,
-                user: JSON.parse(localStorage.getItem('elite_user')) || null,
-                db: null,
-                fechaHoy: new Date().toISOString().split('T')[0]
-            };
+            const state = { token: null, user: null, db: null };
 
-            // INIT: Verificar si hay sesión guardada
-            window.onload = async () => {
-                if (state.token && state.user) {
-                    await cargarBaseDeDatos();
-                }
-            };
-
-            // --- API WRAPPER CON JWT ---
-            async function apiFetch(endpoint, method = 'GET', body = null) {
-                const headers = { 'Content-Type': 'application/json' };
-                if (state.token) headers['Authorization'] = \`Bearer \${state.token}\`;
-                
-                const options = { method, headers };
-                if (body) options.body = JSON.stringify(body);
-                
-                try {
-                    const req = await fetch(endpoint, options);
-                    const res = await req.json();
-                    if (req.status === 403 || req.status === 401) {
-                        cerrarSesion();
-                        throw new Error("Sesión expirada");
-                    }
-                    return res;
-                } catch (error) {
-                    console.error("API Error:", error);
-                    return null;
-                }
+            async function req(url, method='GET', body=null) {
+                const opt = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.token }};
+                if(body) opt.body = JSON.stringify(body);
+                const r = await fetch(url, opt);
+                return await r.json();
             }
 
-            // --- LÓGICA DE AUTENTICACIÓN ---
-            async function iniciarSesion() {
-                const u = document.getElementById('username').value;
-                const p = document.getElementById('password').value;
-                const errBox = document.getElementById('login-error');
+            async function login() {
+                const res = await req('/api/login', 'POST', { u: document.getElementById('log-user').value, p: document.getElementById('log-pass').value });
+                if(res.success) { state.token = res.token; state.user = res.user; initApp(); }
+                else alert("Credenciales incorrectas");
+            }
+
+            function logout() { location.reload(); }
+
+            async function initApp() {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                if(state.user.rol === 'admin') document.getElementById('btn-god').classList.remove('hidden');
+                state.db = await req('/api/data');
+                renderHome();
+            }
+
+            // --- RENDERIZADORES DE VISTAS ---
+            function renderHome() {
+                let html = \`<h1 style="margin-bottom: 40px; font-size: 3rem; text-transform: uppercase;">Muro del <span style="color:var(--gold)">1%</span></h1><div class="feed-grid">\`;
                 
-                errBox.innerText = "Conectando con la matriz...";
-                
-                const req = await fetch('/api/auth/login', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: u, password: p })
+                // Renderizar Posts
+                state.db.posts.forEach(p => {
+                    let vid = p.video ? \`<iframe src="\${p.video}" style="width:100%; height:400px; border:none; margin-top:20px; border-radius:8px;"></iframe>\` : '';
+                    html += \`<div class="post-card">
+                        <div style="color:var(--muted); font-size: 12px; margin-bottom: 10px;">\${p.fecha}</div>
+                        <h2 style="color:var(--gold); margin-bottom: 15px;">\${p.titulo}</h2>
+                        <p style="line-height: 1.6;">\${p.contenido}</p>
+                        \${vid}
+                    </div>\`;
                 });
-                const res = await req.json();
                 
-                if (res.success) {
-                    state.token = res.token;
-                    state.user = res.usuario;
-                    localStorage.setItem('elite_token', res.token);
-                    localStorage.setItem('elite_user', JSON.stringify(res.usuario));
-                    await cargarBaseDeDatos();
-                } else {
-                    errBox.innerText = res.message;
-                }
-            }
-
-            function cerrarSesion() {
-                localStorage.removeItem('elite_token');
-                localStorage.removeItem('elite_user');
-                location.reload();
-            }
-
-            // --- CARGA DE MATRIZ DE DATOS ---
-            async function cargarBaseDeDatos() {
-                const data = await apiFetch('/api/ecosistema/datos');
-                if (data) {
-                    state.db = data;
-                    
-                    // Configurar UI Global
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('app-container').classList.remove('hidden');
-                    document.getElementById('ui-username').innerText = state.user.nombre;
-                    document.getElementById('ui-role').innerText = state.user.rol;
-                    document.getElementById('ui-avatar').innerText = state.user.nombre.substring(0,2).toUpperCase();
-                    
-                    if (state.user.rol === 'admin') document.getElementById('btn-godmode').classList.remove('hidden');
-                    
-                    renderHub();
-                    actualizarPanelLateral();
-                }
-            }
-
-            // --- SISTEMA DE ENRUTAMIENTO Y RENDERIZADO ---
-            function renderHub() {
-                const main = document.getElementById('main-view');
-                const feed = state.db.feed || { titulo: "Mentalidad de Élite", descripcion: "Cargando matriz...", videoUrl: "" };
-                
-                let html = \`
-                    <div class="hero-grid" style="animation: fadeIn 0.5s ease-out;">
-                        <div>
-                            <h1 style="font-size: 56px; font-weight: 900; line-height: 1.1; margin-bottom: 20px; text-transform: uppercase;">
-                                \${feed.titulo.replace('1%', '<span style="color:var(--gold-primary)">1%</span>')}
-                            </h1>
-                            <p style="font-size: 18px; color: var(--text-muted); line-height: 1.6; margin-bottom: 40px; max-width: 600px;">
-                                \${feed.descripcion}
-                            </p>
-                            <button class="btn-gold" onclick="document.getElementById('escalera').scrollIntoView()">Iniciar Entrenamiento</button>
-                        </div>
-                        <div class="video-wrapper">
-                            <iframe src="\${feed.videoUrl}" frameborder="0" allowfullscreen></iframe>
-                        </div>
-                    </div>
-                    
-                    <h2 id="escalera" style="font-size: 32px; font-weight: 900; border-bottom: 1px solid var(--border-light); padding-bottom: 20px; margin-bottom: 40px; text-transform: uppercase;">Escalera de Valor</h2>
-                    <div class="escalera-grid">
-                \`;
-
-                // Renderizar Programas Dinámicamente desde el JSON
-                Object.entries(state.db.programas).forEach(([key, prog]) => {
-                    // Lógica de Bloqueo: Si es alumno, solo puede entrar a su programa (o novatos por defecto)
-                    const isLocked = state.user.rol === 'alumno' && state.user.programa !== key && key !== 'novatos';
-                    const lockIcon = isLocked ? '<span style="font-size:24px;">🔒</span>' : '';
-                    
-                    html += \`
-                        <div class="program-card" onclick="\${isLocked ? \`alert('Nivel Bloqueado. Debes superar tu programa actual.')\` : \`renderPrograma('\${key}')\`}">
-                            <div>
-                                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:20px;">
-                                    <h3 style="font-size: 22px; color: var(--gold-primary); text-transform: uppercase; font-weight: 900;">\${prog.titulo}</h3>
-                                    \${lockIcon}
-                                </div>
-                                <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">\${prog.intro || prog.duracion}</p>
-                            </div>
-                            <div style="font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-top: 30px;">
-                                \${isLocked ? 'Requiere Ascenso' : 'Ingresar a Fase'}
-                            </div>
-                        </div>
-                    \`;
-                });
-
-                html += \`</div>\`;
-                main.innerHTML = html;
+                html += \`<button class="btn" style="margin-top: 40px; width:100%; padding: 20px; font-size: 1.2rem;" onclick="renderPrograma('novatos')">INGRESAR A MI ENTRENAMIENTO</button>\`;
+                document.getElementById('main-content').innerHTML = html;
             }
 
             function renderPrograma(progKey) {
-                const main = document.getElementById('main-view');
                 const prog = state.db.programas[progKey];
-                
-                // Extraer caché del día actual para este usuario
-                const userCache = state.db.cache_usuarios[state.user.id] || {};
-                const todayCache = userCache[state.fechaHoy] || {};
+                let html = \`<button class="btn btn-outline" style="margin-bottom:20px;" onclick="renderHome()">← Volver</button>
+                            <h1 style="color:var(--gold); font-size: 3rem; margin-bottom: 10px; text-transform:uppercase;">\${prog.titulo}</h1>
+                            <p style="color:var(--muted); margin-bottom: 40px;">\${prog.descripcion}</p>\`;
 
-                let html = \`
-                    <button class="btn-outline" style="margin-bottom: 40px; font-size: 12px; padding: 10px 20px;" onclick="renderHub()">← Volver al Hub</button>
-                    <h1 style="font-size: 48px; font-weight: 900; color: var(--gold-primary); margin-bottom: 10px; text-transform: uppercase;">\${prog.titulo}</h1>
-                    <p style="font-size: 14px; color: var(--text-muted); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 50px;">Fase Activa: \${prog.duracion}</p>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-                \`;
-
-                // Renderizar Módulos Internos (Iterando sobre las 1600+ líneas del JSON)
-                if (prog.modulos) {
-                    Object.entries(prog.modulos).forEach(([modKey, mod]) => {
-                        
-                        let checklistHtml = '';
-                        if (mod.checklist && mod.checklist.length > 0) {
-                            checklistHtml = \`<div class="checklist-box">
-                                <h4 style="font-size: 12px; color: var(--gold-primary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">Checklist Diario (\${state.fechaHoy})</h4>
-                            \`;
-                            
-                            mod.checklist.forEach((task, idx) => {
-                                const isCompleted = todayCache[modKey] && todayCache[modKey][idx];
-                                const cssClass = isCompleted ? 'task-item completed' : 'task-item';
-                                checklistHtml += \`
-                                    <div id="check-\${modKey}-\${idx}" class="\${cssClass}" onclick="toggleChecklist('\${progKey}', '\${modKey}', \${idx})">
-                                        <div class="task-box"></div>
-                                        <span style="font-size: 14px; font-weight: 600;">\${task}</span>
-                                    </div>
-                                \`;
-                            });
-                            checklistHtml += \`</div>\`;
-                        }
-
-                        const pdfHtml = mod.pdfUrl ? \`<button class="btn-outline" style="width:100%; margin-top:20px; font-size:12px;" onclick="window.open('\${mod.pdfUrl}')">📄 Descargar Material Estructural</button>\` : '';
-
-                        html += \`
-                            <div class="module-wrapper">
-                                <h2 style="font-size: 24px; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                                    <span style="color:var(--gold-primary)">|</span> \${mod.titulo}
-                                </h2>
-                                <div class="module-content">\${mod.contenido}</div>
-                                \${pdfHtml}
-                                \${checklistHtml}
-                            </div>
-                        \`;
-                    });
-                }
-
-                html += \`</div>\`;
-                main.innerHTML = html;
-                window.scrollTo(0,0);
-            }
-
-            // --- LÓGICA DE GAMIFICACIÓN AL VUELO ---
-            async function toggleChecklist(progKey, modKey, taskIndex) {
-                const checkElement = document.getElementById(\`check-\${modKey}-\${taskIndex}\`);
-                const wasCompleted = checkElement.classList.contains('completed');
-                const isNowCompleted = !wasCompleted;
-                
-                // UI Inmediata (Optimista)
-                if (isNowCompleted) checkElement.classList.add('completed');
-                else checkElement.classList.remove('completed');
-
-                // Enviar a Backend de forma silenciosa
-                const res = await apiFetch('/api/ecosistema/progreso', 'POST', {
-                    userId: state.user.id,
-                    fecha: state.fechaHoy,
-                    moduloKey: modKey,
-                    taskIndex: taskIndex,
-                    valor: isNowCompleted
-                });
-
-                if (res && res.success) {
-                    // Actualizar estado local
-                    if(!state.db.cache_usuarios[state.user.id]) state.db.cache_usuarios[state.user.id] = {};
-                    state.db.cache_usuarios[state.user.id][state.fechaHoy] = res.cacheDia;
-                    actualizarPanelLateral(); // Recalcula barras y calendarios
-                }
-            }
-
-            function actualizarPanelLateral() {
-                const panel = document.getElementById('panel-gamificacion');
-                const userCache = state.db.cache_usuarios[state.user.id] || {};
-                
-                // LÓGICA MATEMÁTICA: 12 Semanas = 84 Días. 
-                // Contamos cuántos días distintos tienen al menos un checklist en true.
-                let diasCompletados = 0;
-                Object.values(userCache).forEach(diaObj => {
-                    let cumplioDia = false;
-                    Object.values(diaObj).forEach(modObj => {
-                        Object.values(modObj).forEach(val => { if (val) cumplioDia = true; });
-                    });
-                    if (cumplioDia) diasCompletados++;
-                });
-
-                const porcentaje = Math.min(100, Math.round((diasCompletados / 84) * 100));
-
-                // LÓGICA CALENDARIO: Últimos 14 días
-                let calHtml = '';
-                let d = new Date(state.fechaHoy);
-                d.setDate(d.getDate() - 13);
-                
-                for(let i=0; i<14; i++) {
-                    const dateStr = d.toISOString().split('T')[0];
-                    let css = "cal-day";
-                    if (dateStr === state.fechaHoy) css += " today";
-                    
-                    // Comprobar si ese día hubo actividad
-                    if(userCache[dateStr]) {
-                        let activo = false;
-                        Object.values(userCache[dateStr]).forEach(modObj => {
-                            Object.values(modObj).forEach(val => { if(val) activo = true; });
-                        });
-                        if (activo) css += " active";
-                    }
-
-                    calHtml += \`<div class="\${css}" title="\${dateStr}">\${d.getDate()}</div>\`;
-                    d.setDate(d.getDate() + 1);
-                }
-
-                panel.innerHTML = \`
-                    <div class="progress-container">
-                        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px;">
-                            <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);">Progreso (12 Semanas)</span>
-                            <span style="font-size: 32px; font-weight: 900; color: var(--gold-primary);">\${porcentaje}%</span>
+                // 1. Renderizar Tarjetas Expandibles (Nutrición, Entreno, etc)
+                Object.entries(prog.tarjetas).forEach(([key, data]) => {
+                    html += \`
+                    <div class="expandable-card" onclick="this.classList.toggle('active')">
+                        <div class="card-header"><span>\${data.titulo}</span> <span>▼</span></div>
+                        <div class="card-body">
+                            <p style="line-height:1.7; color:#ccc; margin-bottom:15px;">\${data.contenido}</p>
+                            \${data.pdf !== '#' ? \`<a href="\${data.pdf}" target="_blank" class="btn btn-outline" style="font-size:12px;">Descargar PDF</a>\` : ''}
                         </div>
-                        <div class="progress-track"><div class="progress-fill" style="width: \${porcentaje}%"></div></div>
-                        <p style="font-size: 11px; color: #555; margin-top: 15px; text-align: center;">\${diasCompletados} de 84 días estructurales completados.</p>
-                    </div>
+                    </div>\`;
+                });
 
-                    <div class="progress-container">
-                        <h4 style="font-size: 12px; color: var(--gold-primary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; text-align: center;">Heatmap Histórico</h4>
-                        <div class="calendar-grid">\${calHtml}</div>
-                    </div>
-                \`;
-            }
+                // 2. Renderizar Matriz de 84 Días (Gamificación)
+                html += \`<h3 style="margin-top: 50px; border-bottom: 1px solid var(--border); padding-bottom:10px;">TU PROGRESO DIARIO (84 DÍAS)</h3>
+                         <div class="matrix-grid">\`;
+                
+                const cacheUsuario = (state.db.cache_diario[state.user.id] || {})[progKey] || {};
 
-            function togglePanel() {
-                document.getElementById('side-panel').classList.toggle('active');
-            }
-
-            // --- CMS: MODO DIOS (Solo Admin) ---
-            function renderAdmin() {
-                const main = document.getElementById('main-view');
-                const dbText = JSON.stringify(state.db.programas, null, 2); // Exponemos toda la estructura JSON para editar
-
-                main.innerHTML = \`
-                    <button class="btn-outline" style="margin-bottom: 40px; font-size: 12px; padding: 10px 20px;" onclick="renderHub()">← Volver al Hub</button>
-                    <h1 style="font-size: 48px; font-weight: 900; color: var(--gold-primary); margin-bottom: 10px; text-transform: uppercase;">Modo Dios</h1>
-                    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 40px;">Edición profunda de la Matriz. Ten cuidado, los cambios afectan a todos los alumnos.</p>
-                    
-                    <div style="background: var(--bg-card); padding: 40px; border-radius: 12px; border: 1px solid var(--border-light);">
-                        <h3 style="color: white; margin-bottom: 20px;">1. Modificar Feed Inicial</h3>
-                        <input type="text" id="adm-feed-tit" class="login-input" value="\${state.db.feed.titulo}">
-                        <textarea id="adm-feed-desc" class="login-input" style="height: 100px;">\${state.db.feed.descripcion}</textarea>
-                        
-                        <h3 style="color: white; margin-top: 40px; margin-bottom: 20px;">2. Consola de Estructura de Programas (JSON Raw)</h3>
-                        <p style="font-size: 12px; color: var(--danger); margin-bottom: 15px;">⚠️ Altera los valores de "contenido", "titulo", o "checklist". No rompas la sintaxis JSON.</p>
-                        <textarea id="adm-prog-json" class="login-input" style="height: 400px; font-family: monospace; font-size: 13px; background: #000; color: #0f0;">\${dbText}</textarea>
-                        
-                        <button class="btn-gold" style="width: 100%; margin-top: 20px; font-size: 18px;" onclick="guardarModoDios()">💾 INYECTAR EN EL SERVIDOR</button>
-                    </div>
-                \`;
-            }
-
-            async function guardarModoDios() {
-                try {
-                    const newFeed = {
-                        titulo: document.getElementById('adm-feed-tit').value,
-                        descripcion: document.getElementById('adm-feed-desc').value,
-                        videoUrl: state.db.feed.videoUrl
-                    };
-                    const newProgs = JSON.parse(document.getElementById('adm-prog-json').value);
-
-                    const res = await apiFetch('/api/admin/actualizar', 'POST', { feed: newFeed, programas: newProgs });
-                    
-                    if(res && res.success) {
-                        alert("✅ Código inyectado exitosamente en el Ecosistema.");
-                        await cargarBaseDeDatos(); // Recargar todo
-                    } else {
-                        alert("❌ Error de permisos o servidor.");
-                    }
-                } catch (e) {
-                    alert("🔥 ERROR DE SINTAXIS JSON. Revisa las comillas y comas del código antes de inyectar.");
+                for(let i=1; i<=84; i++) {
+                    const diaKey = \`dia_\${i}\`;
+                    const status = cacheUsuario[diaKey] || {};
+                    // Chequear si completó al menos una tarea del día
+                    const completado = Object.values(status).some(v => v === true) ? 'completed' : '';
+                    html += \`<div class="day-btn \${completado}" onclick="abrirDia('\${progKey}', '\${diaKey}', \${i})">\${i}</div>\`;
                 }
+                html += \`</div>\`;
+
+                document.getElementById('main-content').innerHTML = html;
+            }
+
+            // --- LÓGICA DE GAMIFICACIÓN DIARIA ---
+            function abrirDia(progKey, diaKey, numDia) {
+                const modal = document.getElementById('day-modal');
+                document.getElementById('modal-title').innerText = \`DÍA \${numDia} - CHECKLIST\`;
+                
+                const cacheUsuario = (state.db.cache_diario[state.user.id] || {})[progKey] || {};
+                const estadoDia = cacheUsuario[diaKey] || {};
+
+                // Tareas estandarizadas (Esto se puede volver dinámico desde la DB)
+                const tareas = [
+                    { id: 'sueño', label: 'Dormí 7-8 Horas' },
+                    { id: 'agua', label: 'Hidratación Optimizada (3L)' },
+                    { id: 'desayuno', label: 'Desayuno Anti-inflamatorio' },
+                    { id: 'entreno', label: 'Rutina del Día Completada' }
+                ];
+
+                let checkHtml = '';
+                tareas.forEach(t => {
+                    const activo = estadoDia[t.id] ? 'active' : '';
+                    checkHtml += \`
+                    <div class="checklist-item \${activo}" onclick="toggleTask(this, '\${progKey}', '\${diaKey}', '\${t.id}')">
+                        <div class="check-box"></div>
+                        <span>\${t.label}</span>
+                    </div>\`;
+                });
+
+                document.getElementById('modal-checklist').innerHTML = checkHtml;
+                modal.classList.remove('hidden');
+            }
+
+            async function toggleTask(el, progKey, diaKey, taskId) {
+                const isNowActive = !el.classList.contains('active');
+                if(isNowActive) el.classList.add('active'); else el.classList.remove('active');
+                
+                const res = await req('/api/progreso', 'POST', { progId: progKey, dia: diaKey, task: taskId, valor: isNowActive });
+                if(res.success) {
+                    state.db.cache_diario[state.user.id] = res.cache;
+                    // Recargar visual de la matriz de fondo silenciosamente
+                    const btnArray = document.querySelectorAll('.day-btn');
+                    const diaNum = parseInt(diaKey.split('_')[1]);
+                    const estadoActualizado = res.cache[progKey][diaKey] || {};
+                    if(Object.values(estadoActualizado).some(v => v === true)) {
+                        btnArray[diaNum-1].classList.add('completed');
+                    } else {
+                        btnArray[diaNum-1].classList.remove('completed');
+                    }
+                }
+            }
+
+            // --- MODO DIOS (CMS Dinámico) ---
+            function renderGodMode() {
+                let html = \`
+                <button class="btn btn-outline" style="margin-bottom:20px;" onclick="renderHome()">← Salir Modo Dios</button>
+                <h1 style="color:var(--gold); font-size: 3rem; margin-bottom: 30px;">PANEL DE CONTROL</h1>
+                
+                <div class="god-panel">
+                    <div class="god-menu">
+                        <button class="active" onclick="showTab('god-posts')">📝 Crear Post en Muro</button>
+                        <button onclick="showTab('god-cards')">🗂️ Modificar Tarjetas (Programas)</button>
+                        <button onclick="showTab('god-users')">👥 Gestión de Alumnos</button>
+                    </div>
+                    
+                    <div class="god-content">
+                        <div id="god-posts" class="god-tab">
+                            <h2 style="margin-bottom:20px;">Nuevo Post de Autoridad</h2>
+                            <input type="text" id="post-tit" class="input" placeholder="Título del Post">
+                            <textarea id="post-desc" class="input" style="height:150px;" placeholder="Contenido o reflexión..."></textarea>
+                            <input type="text" id="post-vid" class="input" placeholder="URL Video YouTube (Opcional)">
+                            <button class="btn" onclick="crearPost()">Publicar al Ecosistema</button>
+                        </div>
+                        
+                        <div id="god-cards" class="god-tab hidden">
+                            <h2 style="margin-bottom:20px;">Edición Estructural (JSON Crudo)</h2>
+                            <p style="color:var(--muted); font-size:12px; margin-bottom:15px;">Modifica los textos, añade módulos y cambia los links de los PDFs directamente aquí.</p>
+                            <textarea id="db-programas-editor" class="input" style="height: 400px; font-family: monospace; font-size:13px;">\${JSON.stringify(state.db.programas, null, 2)}</textarea>
+                            <button class="btn">Guardar Estructura</button>
+                        </div>
+
+                         <div id="god-users" class="god-tab hidden">
+                            <h2 style="margin-bottom:20px;">Métricas Próximamente</h2>
+                            <p style="color:var(--muted);">Visualización del caché de alumnos en la siguiente actualización.</p>
+                        </div>
+                    </div>
+                </div>\`;
+                
+                document.getElementById('main-content').innerHTML = html;
+            }
+
+            function showTab(tabId) {
+                document.querySelectorAll('.god-tab').forEach(e => e.classList.add('hidden'));
+                document.getElementById(tabId).classList.remove('hidden');
+            }
+
+            async function crearPost() {
+                const payload = {
+                    titulo: document.getElementById('post-tit').value,
+                    contenido: document.getElementById('post-desc').value,
+                    video: document.getElementById('post-vid').value
+                };
+                await req('/api/godmode/post', 'POST', payload);
+                alert("Post Inyectado con éxito.");
+                state.db = await req('/api/data'); // Refrescar estado global
+                renderHome();
             }
         </script>
-        <style>
-            @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        </style>
     </body>
     </html>
     `);
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("🚀 ECOSISTEMA V10.0 MASTER ÉLITE ONLINE. (JWT Auth Activado)"));
+const PORT = 3000;
+app.listen(PORT, () => console.log("🔥 MOTOR V11.0 OMNIVERSO EN LÍNEA. LISTO PARA DESPLIEGUE."));
